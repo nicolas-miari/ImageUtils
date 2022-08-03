@@ -1,5 +1,7 @@
 import Foundation
 import CoreGraphics
+import ImageIO
+import UniformTypeIdentifiers
 
 extension CGImage {
 
@@ -31,6 +33,25 @@ extension CGImage {
     }
     return image
   }
+
+  public func pngData() throws -> Data {
+    guard let imageData = CFDataCreateMutable(nil, 0) else {
+      throw ImageUtilError.failedToCreatePNGData
+    }
+    let identifier = UTType.png.identifier as CFString
+    guard let destination = CGImageDestinationCreateWithData(imageData, identifier, 1, nil) else {
+      throw ImageUtilError.failedToCreatePNGData
+    }
+    CGImageDestinationAddImage(destination, self, nil)
+    guard CGImageDestinationFinalize(destination) else {
+      throw ImageUtilError.failedToCreatePNGData
+    }
+    return (imageData as Data)
+  }
+
+  var aspectRatio: CGFloat {
+    return CGFloat(width) / CGFloat(height)
+  }
 }
 
 // MARK: - Supporting Types
@@ -38,4 +59,5 @@ extension CGImage {
 public enum ImageUtilError: LocalizedError {
   case failedToCreateGraphicsContext
   case failedToCreateImage
+  case failedToCreatePNGData
 }
